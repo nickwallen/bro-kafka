@@ -15,7 +15,7 @@ using threading::Field;
 using threading::formatter::Formatter;
 using threading::formatter::JSON;
 
-namespace logging { namespace writer {
+namespace metron { namespace kafka {
 
 /**
  * A logging writer that sends data to a Kafka broker.
@@ -26,7 +26,6 @@ public:
 	KafkaWriter(WriterFrontend *frontend);
 	~KafkaWriter();
 
-	//static string LogExt();
 	static WriterBackend* Instantiate(WriterFrontend* frontend)
 	{
 		return new KafkaWriter(frontend);

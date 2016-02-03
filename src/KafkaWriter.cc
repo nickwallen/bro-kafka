@@ -5,9 +5,7 @@
 #include "KafkaWriter.h"
 #include "kafka.bif.h"
 
-using namespace logging;
-using namespace writer;
-
+using metron::kafka::KafkaWriter;
 using logging::WriterBackend;
 using logging::WriterFrontend;
 using threading::Value;
@@ -121,7 +119,7 @@ bool KafkaWriter::DoWrite(int num_fields, const threading::Field* const* fields,
 	const char* raw = (const char*) buff.Bytes();
 	RdKafka::ErrorCode resp = producer->produce(topic, RdKafka::Topic::PARTITION_UA,
 		RdKafka::Producer::RK_MSG_COPY, const_cast<char *>(raw), strlen(raw), NULL, NULL);
-		
+
 	if (RdKafka::ERR_NO_ERROR == resp)
 	{
 		producer->poll(0);

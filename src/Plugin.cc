@@ -8,7 +8,7 @@ using namespace plugin::Metron_Kafka;
 
 plugin::Configuration Plugin::Configure()
 {
-	AddComponent(new ::logging::Component("KafkaWriter", ::logging::writer::KafkaWriter::Instantiate));
+	AddComponent(new ::logging::Component("KafkaWriter", ::metron::kafka::KafkaWriter::Instantiate));
 
 	plugin::Configuration config;
 	config.name = "Metron::Kafka";
