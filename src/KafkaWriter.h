@@ -23,17 +23,17 @@ namespace logging { namespace writer {
 class KafkaWriter : public WriterBackend
 {
 public:
-  KafkaWriter(WriterFrontend *frontend);
-  ~KafkaWriter();
+	KafkaWriter(WriterFrontend *frontend);
+	~KafkaWriter();
 
-  //static string LogExt();
+	//static string LogExt();
 	static WriterBackend* Instantiate(WriterFrontend* frontend)
 	{
-    return new KafkaWriter(frontend);
-  }
+		return new KafkaWriter(frontend);
+	}
 
 protected:
-  virtual bool DoInit(const WriterBackend::WriterInfo& info, int num_fields, const threading::Field* const* fields);
+	virtual bool DoInit(const WriterBackend::WriterInfo& info, int num_fields, const threading::Field* const* fields);
 	virtual bool DoWrite(int num_fields, const threading::Field* const* fields, threading::Value** vals);
 	virtual bool DoSetBuf(bool enabled);
 	virtual bool DoRotate(const char* rotated_path, double open, double close, bool terminating);
@@ -43,18 +43,18 @@ protected:
 
 private:
 
-  // values defined within 'bro-space'; must match kafka.bif, scripts/init.bro
-  string kafka_broker_list;
-  string topic_name;
-  int max_wait_on_delivery;
+	// values defined within 'bro-space'; must match kafka.bif, scripts/init.bro
+	string kafka_broker_list;
+	string topic_name;
+	int max_wait_on_delivery;
 
-  // other
-  string log_type;
-  Formatter *formatter;
-  RdKafka::Producer *producer;
-  RdKafka::Topic *topic;
-  RdKafka::Conf *conf;
-  RdKafka::Conf *topic_conf;
+	// other
+	string log_type;
+	Formatter *formatter;
+	RdKafka::Producer *producer;
+	RdKafka::Topic *topic;
+	RdKafka::Conf *conf;
+	RdKafka::Conf *topic_conf;
 };
 
 }}
