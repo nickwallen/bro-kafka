@@ -16,7 +16,6 @@ protected:
 
 extern Plugin plugin;
 
-}
-}
+}}
 
 #endif

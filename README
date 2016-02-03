@@ -3,3 +3,30 @@ Metron::Kafka
 =================================
 
 <Insert plugin documentation here.>
+
+```
+cd bro-kafka
+./configure --bro-dist=/home/vagrant/bro-2.4.1 --with-librdkafka=/usr/lib64
+make
+```
+
+Create a bro script as follows.  Ultimately, this will likely become
+`/usr/local/bro/share/bro/site/local.bro`.
+
+```
+@load base/protocols/http
+@load base/protocols/dns
+
+@load-plugin Metron::Kafka
+@load Metron/Kafka/logs-to-kafka.bro
+
+redef Kafka::streams_to_include = set(HTTP::LOG, DNS::LOG);
+redef Kafka::kafka_broker_list = "localhost:9092";
+redef Kafka::topic_name = "bro";
+```
+
+```
+export BRO_PLUGIN_PATH="/home/vagrant/bro-kafka/build/"
+bro -NN Metron::Kafka
+sudo -E /usr/local/bro/bin/bro -b local.bro -i eth0
+```

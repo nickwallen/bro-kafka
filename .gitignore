@@ -1,3 +1,6 @@
+.state
+build
+
 # Compiled Object files
 *.slo
 *.lo

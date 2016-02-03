@@ -5,22 +5,20 @@
 
 plugin_usage()
 {
-    : # Do nothing
-#    cat <<EOF
-#    --with-foo=DIR          Path to foo
-# EOF
+	cat <<EOF
+	 --with-librdkafka=PATH   path to librdkafka
+EOF
 }
 
 plugin_option()
 {
     case "$1" in
-#        --with-foo=*)
-#            append_cache_entry FOO_DIR PATH $optarg
-#            return 0
-#            ;;
+      --with-librdkafka=*)
+		    append_cache_entry LibRdKafka_ROOT_DIR PATH $optarg
+		;;
 
-        *)
-            return 1;
-            ;;
+      *)
+        return 1;
+    ;;
     esac
 }
