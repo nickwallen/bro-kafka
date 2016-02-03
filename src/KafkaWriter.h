@@ -4,7 +4,6 @@
 
 #include <logging/WriterBackend.h>
 #include <logging/WriterFrontend.h>
-#include <threading/formatters/JSON.h>
 #include <threading/Formatter.h>
 #include <librdkafka/rdkafkacpp.h>
 
@@ -13,7 +12,6 @@ using logging::WriterFrontend;
 using threading::Value;
 using threading::Field;
 using threading::formatter::Formatter;
-using threading::formatter::JSON;
 
 namespace metron { namespace kafka {
 
@@ -48,7 +46,6 @@ private:
 	int max_wait_on_delivery;
 
 	// other
-	string log_type;
 	Formatter *formatter;
 	RdKafka::Producer *producer;
 	RdKafka::Topic *topic;

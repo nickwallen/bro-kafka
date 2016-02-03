@@ -13,6 +13,7 @@ if ( LIBRDKAFKA_FOUND )
 
 	bro_plugin_begin(METRON KAFKA)
 	bro_plugin_cc(src/KafkaWriter.cc)
+	bro_plugin_cc(src/MetronJSON.cc)
 	bro_plugin_cc(src/Plugin.cc)
 	bro_plugin_bif(src/kafka.bif)
 	bro_plugin_dist_files(README CHANGES COPYING VERSION)

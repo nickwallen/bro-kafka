@@ -2,8 +2,10 @@
 #include <librdkafka/rdkafkacpp.h>
 #include <logging/WriterBackend.h>
 #include <logging/WriterFrontend.h>
+#include <threading/formatters/JSON.h>
 #include "KafkaWriter.h"
 #include "kafka.bif.h"
+#include "MetronJSON.h"
 
 using metron::kafka::KafkaWriter;
 using logging::WriterBackend;
@@ -11,14 +13,11 @@ using logging::WriterFrontend;
 using threading::Value;
 using threading::Field;
 using threading::formatter::JSON;
+using metron::formatter::MetronJSON;
 
-KafkaWriter::KafkaWriter(WriterFrontend* frontend): WriterBackend(frontend)
+KafkaWriter::KafkaWriter(WriterFrontend* frontend): WriterBackend(frontend),
+	formatter(NULL), producer(NULL), topic(NULL)
 {
-	log_type = "";
-	formatter = NULL;
-	producer = NULL;
-	topic = NULL;
-
 	// kafka broker setting
 	kafka_broker_list.assign((const char*)
 		BifConst::Kafka::kafka_broker_list->Bytes(),
@@ -38,12 +37,10 @@ KafkaWriter::~KafkaWriter()
 
 bool KafkaWriter::DoInit(const WriterInfo& info, int num_fields, const Field* const* fields)
 {
-	// indicates the log stream type; aka HTTP::LOG, DNS::LOG
-	log_type = info.path;
-
 	// initialize the formatter
+	// 'info.path' indicates the log stream type; aka HTTP::LOG, DNS::LOG
 	delete formatter;
-	formatter = new JSON(this, JSON::TS_EPOCH);
+	formatter = new MetronJSON(info.path, this, JSON::TS_EPOCH);
 
 	// kafka global configuration
 	string err;
