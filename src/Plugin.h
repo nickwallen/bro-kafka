@@ -7,15 +7,14 @@
 namespace plugin {
 namespace Metron_Kafka {
 
-class Plugin : public ::plugin::Plugin
-{
-protected:
-	// Overridden from plugin::Plugin.
-	virtual plugin::Configuration Configure();
-};
+    class Plugin : public ::plugin::Plugin {
+    protected:
+        // Overridden from plugin::Plugin.
+        virtual plugin::Configuration Configure();
+    };
 
-extern Plugin plugin;
-
-}}
+    extern Plugin plugin;
+}
+}
 
 #endif

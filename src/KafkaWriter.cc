@@ -15,59 +15,59 @@ using threading::Field;
 using threading::formatter::JSON;
 using metron::formatter::MetronJSON;
 
-KafkaWriter::KafkaWriter(WriterFrontend* frontend): WriterBackend(frontend),
-	formatter(NULL), producer(NULL), topic(NULL)
+KafkaWriter::KafkaWriter(WriterFrontend* frontend)
+    : WriterBackend(frontend)
+    , formatter(NULL)
+    , producer(NULL)
+    , topic(NULL)
 {
-	// kafka broker setting
-	kafka_broker_list.assign((const char*)
-		BifConst::Kafka::kafka_broker_list->Bytes(),
-		BifConst::Kafka::kafka_broker_list->Len());
+    // kafka broker setting
+    kafka_broker_list.assign(
+        (const char*)BifConst::Kafka::kafka_broker_list->Bytes(),
+        BifConst::Kafka::kafka_broker_list->Len());
 
-	// topic name setting
-	topic_name.assign((const char*)
-		BifConst::Kafka::topic_name->Bytes(),
-		BifConst::Kafka::topic_name->Len());
+    // topic name setting
+    topic_name.assign((const char*)BifConst::Kafka::topic_name->Bytes(),
+        BifConst::Kafka::topic_name->Len());
 
-	// max wait for queued messages to send on shutdown
-	max_wait_on_delivery = BifConst::Kafka::max_wait_on_delivery;
+    // max wait for queued messages to send on shutdown
+    max_wait_on_delivery = BifConst::Kafka::max_wait_on_delivery;
 }
 
-KafkaWriter::~KafkaWriter()
-{}
+KafkaWriter::~KafkaWriter() {}
 
-bool KafkaWriter::DoInit(const WriterInfo& info, int num_fields, const Field* const* fields)
+bool KafkaWriter::DoInit(const WriterInfo& info, int num_fields,
+    const Field* const* fields)
 {
-	// initialize the formatter
-	// 'info.path' indicates the log stream type; aka HTTP::LOG, DNS::LOG
-	delete formatter;
-	formatter = new MetronJSON(info.path, this, JSON::TS_EPOCH);
+    // initialize the formatter
+    // 'info.path' indicates the log stream type; aka HTTP::LOG, DNS::LOG
+    delete formatter;
+    formatter = new MetronJSON(info.path, this, JSON::TS_EPOCH);
 
-	// kafka global configuration
-	string err;
-	conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-	if (RdKafka::Conf::CONF_OK != conf->set("metadata.broker.list", kafka_broker_list, err)){
-		reporter->Error("Failed to set metatdata.broker.list: %s", err.c_str());
-		return false;
-	}
+    // kafka global configuration
+    string err;
+    conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+    if (RdKafka::Conf::CONF_OK != conf->set("metadata.broker.list", kafka_broker_list, err)) {
+        reporter->Error("Failed to set metatdata.broker.list: %s", err.c_str());
+        return false;
+    }
 
-	// create kafka producer
-	producer = RdKafka::Producer::create(conf, err);
-	if (!producer)
-	{
-		reporter->Error("Failed to create producer: %s", err.c_str());
-		return false;
-	}
+    // create kafka producer
+    producer = RdKafka::Producer::create(conf, err);
+    if (!producer) {
+        reporter->Error("Failed to create producer: %s", err.c_str());
+        return false;
+    }
 
-	// create handle to topic
-	topic_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
-	topic = RdKafka::Topic::create(producer, topic_name, topic_conf, err);
-	if (!topic)
-	{
-		reporter->Error("Failed to create topic handle: %s", err.c_str());
-		return false;
-	}
+    // create handle to topic
+    topic_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+    topic = RdKafka::Topic::create(producer, topic_name, topic_conf, err);
+    if (!topic) {
+        reporter->Error("Failed to create topic handle: %s", err.c_str());
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 /**
@@ -77,57 +77,56 @@ bool KafkaWriter::DoInit(const WriterInfo& info, int num_fields, const Field* co
  */
 bool KafkaWriter::DoFinish(double network_time)
 {
-	bool success = false;
-	int interval = 1000;
-	int waited = 0;
+    bool success = false;
+    int interval = 1000;
+    int waited = 0;
 
-	// wait a bit for queued messages to be delivered
-	while (producer->outq_len() > 0 && waited < max_wait_on_delivery) {
-		producer->poll(interval);
-		waited += interval;
-	}
+    // wait a bit for queued messages to be delivered
+    while (producer->outq_len() > 0 && waited < max_wait_on_delivery) {
+        producer->poll(interval);
+        waited += interval;
+    }
 
-	// successful only if all messages delivered
-	if(producer->outq_len() == 0)
-	{
-		reporter->Error("Unable to deliver %0d message(s)", producer->outq_len());
-		success = true;
-	}
+    // successful only if all messages delivered
+    if (producer->outq_len() == 0) {
+        reporter->Error("Unable to deliver %0d message(s)", producer->outq_len());
+        success = true;
+    }
 
-	delete topic;
-	delete producer;
+    delete topic;
+    delete producer;
 
-	return success;
+    return success;
 }
 
 /**
  * Writer-specific output method implementing recording of one log
  * entry.
  */
-bool KafkaWriter::DoWrite(int num_fields, const threading::Field* const* fields, threading::Value** vals)
+bool KafkaWriter::DoWrite(int num_fields, const threading::Field* const* fields,
+    threading::Value** vals)
 {
-	ODesc buff;
-	buff.Clear();
+    ODesc buff;
+    buff.Clear();
 
-	// format the log entry
-	formatter->Describe(&buff, num_fields, fields, vals);
+    // format the log entry
+    formatter->Describe(&buff, num_fields, fields, vals);
 
-	// send the formatted log entry to kafka
-	const char* raw = (const char*) buff.Bytes();
-	RdKafka::ErrorCode resp = producer->produce(topic, RdKafka::Topic::PARTITION_UA,
-		RdKafka::Producer::RK_MSG_COPY, const_cast<char *>(raw), strlen(raw), NULL, NULL);
+    // send the formatted log entry to kafka
+    const char* raw = (const char*)buff.Bytes();
+    RdKafka::ErrorCode resp = producer->produce(
+        topic, RdKafka::Topic::PARTITION_UA, RdKafka::Producer::RK_MSG_COPY,
+        const_cast<char*>(raw), strlen(raw), NULL, NULL);
 
-	if (RdKafka::ERR_NO_ERROR == resp)
-	{
-		producer->poll(0);
-	}
-	else
-	{
-		string err = RdKafka::err2str(resp);
-		reporter->Error("Kafka send failed: %s", err.c_str());
-	}
+    if (RdKafka::ERR_NO_ERROR == resp) {
+        producer->poll(0);
+    }
+    else {
+        string err = RdKafka::err2str(resp);
+        reporter->Error("Kafka send failed: %s", err.c_str());
+    }
 
-	return true;
+    return true;
 }
 
 /**
@@ -141,8 +140,8 @@ bool KafkaWriter::DoWrite(int num_fields, const threading::Field* const* fields,
  */
 bool KafkaWriter::DoSetBuf(bool enabled)
 {
-	// no change in behavior
-	return true;
+    // no change in behavior
+    return true;
 }
 
 /**
@@ -152,8 +151,8 @@ bool KafkaWriter::DoSetBuf(bool enabled)
  */
 bool KafkaWriter::DoFlush(double network_time)
 {
-	producer->poll(0);
-	return true;
+    producer->poll(0);
+    return true;
 }
 
 /**
@@ -165,10 +164,11 @@ bool KafkaWriter::DoFlush(double network_time)
  * FinishedRotation() to signal the log manager that potential
  * postprocessors can now run.
  */
-bool KafkaWriter::DoRotate(const char* rotated_path, double open, double close, bool terminating)
+bool KafkaWriter::DoRotate(const char* rotated_path, double open, double close,
+    bool terminating)
 {
-	// no need to perform log rotation
-	return true;
+    // no need to perform log rotation
+    return true;
 }
 
 /**
@@ -176,6 +176,6 @@ bool KafkaWriter::DoRotate(const char* rotated_path, double open, double close, 
  */
 bool KafkaWriter::DoHeartbeat(double network_time, double current_time)
 {
-	producer->poll(0);
-	return true;
+    producer->poll(0);
+    return true;
 }
