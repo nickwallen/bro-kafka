@@ -1,6 +1,8 @@
-======================
 Bro Logging with Kafka
 ======================
+
+**Notice**  This code has been contributed to the Bro community and will be maintained there.  Please see https://github.com/bro/bro-plugins.
+
 
 A Bro Log filter that sends log data to Kafka (http://kafka.apache.org/).  This
 provides a convenient means for tools in the Hadoop ecosystem, such as Storm,
